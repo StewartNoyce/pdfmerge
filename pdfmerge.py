@@ -4,13 +4,13 @@
 # - subprocess: http://stackoverflow.com/questions/89228/calling-an-external-command-in-python?rq=1
 
 import sys, subprocess
-from pyPdf import PdfFileWriter, PdfFileReader
+from PyPDF2 import PdfFileMerger
 
 # test base name of the input files, how many files exist?
 if len(sys.argv) > 1:
     ifilebase = sys.argv[1]
 else:
-    print 'pdfmerge requires an input file base name'
+    print('pdfmerge requires an input file base name')
     sys.exit()
 
 # test number of files
@@ -18,23 +18,25 @@ inputfilestest = 'ls '+ifilebase+'*.pdf'
 p = subprocess.Popen(inputfilestest, shell=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
 out, err = p.communicate()
 if err:
-    print err
+    print(err)
     sys.exit()
 else:
-    filenames = out.split('\n')
+    # Python 3 requires bytes object to process binary files correctly
+    filenames = out.split(b'\n')
     if not filenames[len(filenames)-1]:
         filenames.pop()
     numfiles = len(filenames)
-    print 'merging', numfiles, 'files with base', ifilebase
+    print('merging', numfiles, 'files with base', ifilebase)
 
-# open a writer file
-o = PdfFileWriter()
+# open a merger file
+merger = PdfFileMerger()
 
-# open each input file and add to the writer file
+# open each input file and add to the merger file
 for i in range(numfiles):
-    ifile = PdfFileReader(file(filenames[i], "rb"))
-    o.addPage(ifile.getPage(0))
+    ifile = open(filenames[i], "rb")
+    merger.append(ifile)
 
-os = file("testout.pdf", "wb")
-o.write(os)
+os = open("testout.pdf", "wb")
+merger.write(os)
 os.close()
+
